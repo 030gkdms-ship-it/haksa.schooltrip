@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>6학년 현장체험학습 스마트 미션북</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .stamp-badge {
+      background: radial-gradient(circle, #fef08a 0%, #facc15 100%);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen pb-20">
+
+  <!-- 상단 헤더 -->
+  <header class="bg-indigo-600 text-white sticky top-0 z-30 shadow-md px-4 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div>
+        <span class="text-xs bg-indigo-500 text-indigo-100 px-2 py-0.5 rounded-full font-bold">경주 & 부산 탐험</span>
+        <h1 class="text-lg font-bold tracking-tight">🎒 6학년 모둠 스마트 미션북</h1>
+      </div>
+      <button onclick="openTeacherModal()" class="text-xs bg-indigo-700 hover:bg-indigo-800 text-indigo-100 px-2.5 py-1.5 rounded-lg border border-indigo-400 flex items-center gap-1">
+        <i class="fa-solid fa-chalkboard-user"></i> 선생님 검사
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-4 py-4 space-y-4">
+
+    <!-- 모둠 프로필 카드 -->
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">우리 모둠 정보</span>
+        <span id="completionRate" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">진행도: 0/16 미션</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-slate-600 font-medium">모둠 이름 / 번호</label>
+          <input id="teamName" type="text" placeholder="예: 3반 2모둠 (불꽃탐험대)" 
+                 class="w-full text-sm mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                 onchange="saveTeamInfo()" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-600 font-medium">모둠원 (4명)</label>
+          <input id="teamMembers" type="text" placeholder="예: 김민수, 이서연..." 
+                 class="w-full text-sm mt-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                 onchange="saveTeamInfo()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 스탬프 투어 미니 현황판 -->
+    <div class="bg-gradient-to-r from-amber-500 to-yellow-500 rounded-2xl p-4 text-white shadow-md">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="font-bold text-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-stamp text-amber-200"></i> 장소별 스탬프 컬렉션
+        </h2>
+        <span class="text-xs font-medium text-amber-100">완료 시 교사 서명 오픈!</span>
+      </div>
+      <div id="stampGrid" class="grid grid-cols-4 gap-2 pt-1">
+        <!-- JS로 장소별 도장 동적 생성 -->
+      </div>
+    </div>
+
+    <!-- 장소 선택 탭 -->
+    <div>
+      <label class="text-xs font-semibold text-slate-500 px-1 mb-1 block">체험학습 장소 선택</label>
+      <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none" id="placeTabs">
+        <!-- JS 생성 -->
+      </div>
+    </div>
+
+    <!-- 활성화된 장소의 미션 카드 영역 -->
+    <div id="missionContainer" class="space-y-3">
+      <!-- JS 생성 -->
+    </div>
+
+  </main>
+
+  <!-- 제출 모달 창 -->
+  <div id="submitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-start border-b pb-3">
+        <div>
+          <span id="modalPlaceBadge" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">장소</span>
+          <h3 id="modalMissionTitle" class="text-base font-bold text-slate-800 mt-1">미션 제출</h3>
+        </div>
+        <button onclick="closeSubmitModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+        <div class="font-semibold text-slate-800 flex items-center gap-1">
+          <i class="fa-solid fa-circle-info text-indigo-500"></i> 미션 가이드 조건
+        </div>
+        <p id="modalMissionCondition" class="text-slate-600 leading-relaxed"></p>
+      </div>
+
+      <form id="submissionForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">인증 파일 첨부 (사진/영상/캡처)</label>
+          <input type="file" id="submissionFile" accept="image/*,video/*" multiple
+                 class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+          <p class="text-[11px] text-slate-400 mt-1">* 촬영한 사진이나 숏폼 영상을 선택하세요.</p>
+        </div>
+
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">내용 / 설명 / 답변 작성</label>
+          <textarea id="submissionText" rows="3" required placeholder="미션 조건에 맞는 한 문장 설명, 소감, 알게 된 점, 또는 링크를 적어주세요." 
+                    class="w-full text-sm p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm">
+          미션 제출하기 🚀
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 교사 검사 및 비밀번호 모달 -->
+  <div id="teacherModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-user-check text-indigo-600"></i> 선생님 전용 확인 모드
+        </h3>
+        <button onclick="closeTeacherModal()" class="text-slate-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="text-xs text-slate-600 space-y-2">
+        <p>선생님 비밀번호를 입력하면 모둠의 미션 수행 결과를 일괄 승인하거나 현장 확인 도장을 찍어줄 수 있습니다.</p>
+        <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-amber-800 text-[11px]">
+          <strong>💡 기본 관리자 핀번호:</strong> <span class="font-mono font-bold">1234</span> (코드에서 변경 가능)
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <input type="password" id="teacherPin" placeholder="선생님 PIN 번호 입력" 
+               class="w-full text-center text-lg tracking-widest py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+        <button onclick="verifyTeacherPin()" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-sm">
+          인증 및 도장 승인 관리
+        </button>
+      </div>
+
+      <div id="teacherActionArea" class="hidden pt-3 border-t space-y-2">
+        <button onclick="approveAllMissions()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs">
+          ✅ 현재 모둠 모든 미션 '교사 확인 완료' 처리
+        </button>
+        <button onclick="exportSubmissionData()" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg text-xs">
+          📋 제출 기록 텍스트로 내보내기/복사
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 문서에 있는 8개 장소 및 미션 데이터 구조화
+    const missionData = [
+      {
+        id: "p1",
+        name: "국립경주박물관",
+        icon: "fa-landmark",
+        missions: [
+          {
+            id: "p1_m1",
+            title: "신라 금관 & 장신구 디테일 컷 (협동 촬영)",
+            desc: "신라관 내 금관/장신구 중 가장 정교한 부분을 4명이 각기 다른 각도(확대, 측면 등)에서 촬영합니다.",
+            condition: "4장의 사진 + '이 유물이 대단한 이유' 1문장 작성 제출"
+          },
+          {
+            id: "p1_m2",
+            title: "성덕대왕신종(에밀레종) 숏폼 퀴즈",
+            desc: "성덕대왕신종 야외 배경으로 15초 이내 신종의 소리나 역사적 사실 퀴즈 영상을 제작합니다.",
+            condition: "퀴즈 진행 15초 이내 숏폼 영상 제출"
+          }
+        ]
+      },
+      {
+        id: "p2",
+        name: "첨성대",
+        icon: "fa-shapes",
+        missions: [
+          {
+            id: "p2_m1",
+            title: "돌 개수 & 과학적 비밀 숏폼 해설",
+            desc: "첨성대 배경으로 역할(해설2, 촬영1, 연출1)을 나누어 1분 도슨트 영상을 촬영합니다.",
+            condition: "단수(27단)나 돌 개수 등 천문 비밀 설명 영상(40초~1분) 제출"
+          },
+          {
+            id: "p2_m2",
+            title: "착시 효과 '첨성대 들기' 단체샷",
+            desc: "원근감을 활용해 첨성대를 손바닥 위에 올리거나 집고 있는 듯한 창의적 착시 사진을 찍습니다.",
+            condition: "센스 있는 제목이 붙은 착시 사진 1장 제출"
+          }
+        ]
+      },
+      {
+        id: "p3",
+        name: "대릉원",
+        icon: "fa-mountain-sun",
+        missions: [
+          {
+            id: "p3_m1",
+            title: "천마총 유물 스마트 검색 & QR 탐정",
+            desc: "천마총 유물 앞에서 스마트폰 검색이나 전시 QR 코드를 활용해 알려지지 않은 사실 1가지를 찾습니다.",
+            condition: "유물 사진 + 새롭게 알게 된 사실 메모장 캡처 제출"
+          },
+          {
+            id: "p3_m2",
+            title: "포토존 재현 & 신라 왕족 미니 인터뷰",
+            desc: "대릉원 능선 배경으로 왕, 리포터, 호위무사 역할을 맡아 타임슬립 인터뷰 연극을 촬영합니다.",
+            condition: "30초 분량의 숏폼 연극 영상 제출"
+          }
+        ]
+      },
+      {
+        id: "p4",
+        name: "경주월드",
+        icon: "fa-ticket",
+        missions: [
+          {
+            id: "p4_m1",
+            title: "어트랙션 표정 변화 슬로모션 촬영",
+            desc: "대기 조(2명)가 밖에서 수직 하강하는 순간을 슬로모션으로 촬영합니다. (※탑승 중 촬영 절대 금지)",
+            condition: "낙하 순간 5초 이내 슬로모션 영상 제출"
+          },
+          {
+            id: "p4_m2",
+            title: "테마구역 배경 '영화 포스터' 챌린지",
+            desc: "테마구역 구조물을 배경으로 영화 포스터 구도로 촬영하고, 영화 제목/개봉일 텍스트를 합성합니다.",
+            condition: "영화 포스터 스타일로 편집된 이미지 1장 제출"
+          }
+        ]
+      },
+      {
+        id: "p5",
+        name: "국립해양박물관",
+        icon: "fa-fish",
+        missions: [
+          {
+            id: "p5_m1",
+            title: "수족관 해양생물 'AI 렌즈' 탐정",
+            desc: "원통형 수족관 생물을 구글 렌즈 등 AI 렌즈로 촬영하여 정확한 이름을 찾습니다.",
+            condition: "해양생물 사진 + 검색 결과(이름/특징) 캡처본 제출"
+          },
+          {
+            id: "p5_m2",
+            title: "항해관 '조타키 체험' 릴스 연출",
+            desc: "조타 장치 앞에서 선장, 항해사, 갑판장, 조타수 역할을 맡아 위기 극복 15초 연극을 촬영합니다.",
+            condition: "대사와 연기가 담긴 15초 영상 제출"
+          }
+        ]
+      },
+      {
+        id: "p6",
+        name: "아르떼 뮤지엄",
+        icon: "fa-palette",
+        missions: [
+          {
+            id: "p6_m1",
+            title: "내가 그린 해양생물 스캔 & 인증",
+            desc: "도안에 색칠 후 스캔하여 대형 미디어 월에 띄우고 본인 생물과 함께 촬영합니다.",
+            condition: "화면 속 모둠원 4명의 생물이 한 프레임에 담긴 인증샷 제출"
+          },
+          {
+            id: "p6_m2",
+            title: "미디어아트 실루엣 감성 샷",
+            desc: "미디어아트 배경 앞에서 스마트폰 역광 촬영을 활용해 감성적인 실루엣 포즈를 촬영합니다.",
+            condition: "배경 빛이 선명하고 인물이 검은 실루엣으로 나온 단체 사진 제출"
+          }
+        ]
+      },
+      {
+        id: "p7",
+        name: "UN 기념 공원",
+        icon: "fa-dove",
+        missions: [
+          {
+            id: "p7_m1",
+            title: "참전국 상징물 추모 묵념 릴레이",
+            desc: "국기 배양대나 모뉴먼트 앞에서 엄숙히 묵념을 올리고 참전국 국기와 명칭을 기록합니다.",
+            condition: "묵념 모습 + 참전국 이름 사진 + 감사 메시지 한 줄 제출"
+          },
+          {
+            id: "p7_m2",
+            title: "평화 메시지 디지털 방명록",
+            desc: "인상 깊은 장소를 배경으로 메모장 앱에 '세계 평화를 위한 약속' 감사글을 4인이 작성합니다.",
+            condition: "배경 사진에 메모장 글귀를 합성/캡처한 디지털 방명록 제출"
+          }
+        ]
+      },
+      {
+        id: "p8",
+        name: "요트 탑승",
+        icon: "fa-ship",
+        missions: [
+          {
+            id: "p8_m1",
+            title: "바다 배경 '앨범 커버' 컨셉 포토",
+            desc: "구명조끼를 착용한 상태로 바다와 광안대교를 배경으로 아이돌 앨범 커버 포즈를 연출합니다.",
+            condition: "스마트폰 필터를 적용한 모둠 단체 보정샷 1장 제출"
+          },
+          {
+            id: "p8_m2",
+            title: "15초 인터뷰 '요트 위 외치는 나의 꿈'",
+            desc: "요트 위 바다 풍경을 배경으로 미래의 꿈과 다짐을 한 문장씩 외치는 영상을 촬영합니다.",
+            condition: "15초 릴스 다짐 영상 제출"
+          }
+        ]
+      }
+    ];
+
+    let currentPlaceId = "p1";
+    let activeMissionId = null;
+
+    // 로컬 스토리지 로드
+    function loadSavedData() {
+      const teamInfo = JSON.parse(localStorage.getItem("trip_team_info") || "{}");
+      if (teamInfo.name) document.getElementById("teamName").value = teamInfo.name;
+      if (teamInfo.members) document.getElementById("teamMembers").value = teamInfo.members;
+      renderPlaceTabs();
+      renderStamps();
+      renderMissions();
+      updateProgress();
+    }
+
+    function saveTeamInfo() {
+      const info = {
+        name: document.getElementById("teamName").value,
+        members: document.getElementById("teamMembers").value
+      };
+      localStorage.setItem("trip_team_info", JSON.stringify(info));
+    }
+
+    function getSubmissions() {
+      return JSON.parse(localStorage.getItem("trip_submissions") || "{}");
+    }
+
+    function saveSubmission(missionId, textContent, fileName) {
+      const submissions = getSubmissions();
+      submissions[missionId] = {
+        text: textContent,
+        file: fileName || "파일 첨부 완료",
+        timestamp: new Date().toLocaleString(),
+        approved: false
+      };
+      localStorage.setItem("trip_submissions", JSON.stringify(submissions));
+      renderStamps();
+      renderMissions();
+      updateProgress();
+    }
+
+    function renderPlaceTabs() {
+      const container = document.getElementById("placeTabs");
+      container.innerHTML = missionData.map(place => `
+        <button onclick="selectPlace('${place.id}')" 
+                class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shadow-sm ${
+                  place.id === currentPlaceId 
+                  ? 'bg-indigo-600 text-white ring-2 ring-indigo-300' 
+                  : 'bg-white text-slate-600 border border-slate-200'
+                }">
+          <i class="fa-solid ${place.icon}"></i> ${place.name}
+        </button>
+      `).join("");
+    }
+
+    function selectPlace(placeId) {
+      currentPlaceId = placeId;
+      renderPlaceTabs();
+      renderMissions();
+    }
+
+    function renderMissions() {
+      const container = document.getElementById("missionContainer");
+      const place = missionData.find(p => p.id === currentPlaceId);
+      const submissions = getSubmissions();
+
+      container.innerHTML = place.missions.map((m, idx) => {
+        const sub = submissions[m.id];
+        const isDone = !!sub;
+        const isApproved = sub && sub.approved;
+
+        return `
+          <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 transition">
+            <div class="flex items-start justify-between gap-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+                ${isApproved ? '👑 교사 확인 완료' : isDone ? '📩 제출 완료 (확인 대기)' : '미션 ' + (idx + 1)}
+              </span>
+              ${isDone ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' : ''}
+            </div>
+
+            <h3 class="text-sm font-bold text-slate-800 mt-2">${m.title}</h3>
+            <p class="text-xs text-slate-600 mt-1 leading-relaxed">${m.desc}</p>
+
+            <div class="mt-3 bg-indigo-50/70 p-2.5 rounded-xl border border-indigo-100 text-[11px] text-indigo-900">
+              <span class="font-bold">🎯 완료 조건:</span> ${m.condition}
+            </div>
+
+            ${sub ? `
+              <div class="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+                <div class="font-bold text-slate-700 flex items-center justify-between">
+                  <span>제출 내용 기록:</span>
+                  <span class="text-[10px] text-slate-400">${sub.timestamp}</span>
+                </div>
+                <p class="text-slate-600 italic">"${sub.text}"</p>
+                <div class="text-[11px] text-indigo-600 font-medium">📎 ${sub.file}</div>
+              </div>
+            ` : ''}
+
+            <div class="mt-3 pt-2 flex gap-2">
+              <button onclick="openSubmitModal('${m.id}')" 
+                      class="flex-1 py-2 rounded-xl text-xs font-bold text-center transition ${
+                        isDone 
+                        ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' 
+                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                      }">
+                ${isDone ? '내용 수정/다시 제출' : '인증 및 제출하기 ✍️'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderStamps() {
+      const container = document.getElementById("stampGrid");
+      const submissions = getSubmissions();
+
+      container.innerHTML = missionData.map(place => {
+        // 장소의 2개 미션이 모두 완료되었는지 확인
+        const allDone = place.missions.every(m => submissions[m.id]);
+        return `
+          <div class="flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-xl p-1.5 text-center">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm mb-1 ${
+              allDone ? 'stamp-badge text-amber-900 ring-2 ring-white font-bold' : 'bg-white/30 text-white/70'
+            }">
+              <i class="fa-solid ${allDone ? 'fa-stamp' : place.icon}"></i>
+            </div>
+            <span class="text-[10px] font-medium truncate w-full text-amber-50">${place.name}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function updateProgress() {
+      const submissions = getSubmissions();
+      const count = Object.keys(submissions).length;
+      document.getElementById("completionRate").innerText = `진행도: ${count}/16 미션`;
+    }
+
+    // 모달 핸들러
+    function openSubmitModal(missionId) {
+      activeMissionId = missionId;
+      const place = missionData.find(p => p.missions.some(m => m.id === missionId));
+      const mission = place.missions.find(m => m.id === missionId);
+
+      document.getElementById("modalPlaceBadge").innerText = place.name;
+      document.getElementById("modalMissionTitle").innerText = mission.title;
+      document.getElementById("modalMissionCondition").innerText = mission.condition;
+
+      const sub = getSubmissions()[missionId];
+      document.getElementById("submissionText").value = sub ? sub.text : "";
+      document.getElementById("submitModal").classList.remove("hidden");
+    }
+
+    function closeSubmitModal() {
+      document.getElementById("submitModal").classList.add("hidden");
+      activeMissionId = null;
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const text = document.getElementById("submissionText").value;
+      const fileInput = document.getElementById("submissionFile");
+      const fileName = fileInput.files.length > 0 
+        ? `${fileInput.files.length}개 파일 (${fileInput.files[0].name} 등)` 
+        : "제출된 텍스트 응답";
+
+      saveSubmission(activeMissionId, text, fileName);
+      closeSubmitModal();
+      alert("🎉 미션이 성공적으로 제출되었습니다!");
+    }
+
+    // 선생님 모달
+    function openTeacherModal() {
+      document.getElementById("teacherModal").classList.remove("hidden");
+      document.getElementById("teacherActionArea").classList.add("hidden");
+      document.getElementById("teacherPin").value = "";
+    }
+
+    function closeTeacherModal() {
+      document.getElementById("teacherModal").classList.add("hidden");
+    }
+
+    function verifyTeacherPin() {
+      const pin = document.getElementById("teacherPin").value;
+      if (pin === "1234") {
+        document.getElementById("teacherActionArea").classList.remove("hidden");
+      } else {
+        alert("비밀번호가 올바르지 않습니다.");
+      }
+    }
+
+    function approveAllMissions() {
+      const submissions = getSubmissions();
+      Object.keys(submissions).forEach(k => {
+        submissions[k].approved = true;
+      });
+      localStorage.setItem("trip_submissions", JSON.stringify(submissions));
+      renderMissions();
+      alert("✅ 모든 미션에 교사 승인 도장을 날인했습니다!");
+      closeTeacherModal();
+    }
+
+    function exportSubmissionData() {
+      const team = JSON.parse(localStorage.getItem("trip_team_info") || "{}");
+      const submissions = getSubmissions();
+      let summary = `[${team.name || "미지정 모둠"} - 체험학습 미션 제출 현황]\n모둠원: ${team.members || "미지정"}\n\n`;
+
+      missionData.forEach(p => {
+        summary += `📍 ${p.name}\n`;
+        p.missions.forEach(m => {
+          const sub = submissions[m.id];
+          summary += ` - ${m.title}: ${sub ? `[제출완료] ${sub.text}` : '[미완료]'}\n`;
+        });
+        summary += `\n`;
+      });
+
+      navigator.clipboard.writeText(summary).then(() => {
+        alert("모둠 미션 제출 현황이 클립보드에 복사되었습니다! 카톡이나 메모장에 붙여넣을 수 있습니다.");
+      });
+    }
+
+    window.onload = loadSavedData;
+  </script>
+</body>
+</html>
